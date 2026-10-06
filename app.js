@@ -1,6 +1,6 @@
-// NEXUS HR AI — Main Dashboard Application Logic
+// NEXUS HR AI — Main Dashboard & Inference Engine Logic (Light Theme)
 
-const RAW_CSV = `employee_id,years_experience,age,department,performance_score,certifications,monthly_salary
+const DEFAULT_RAW_CSV = `employee_id,years_experience,age,department,performance_score,certifications,monthly_salary
 EMP001,7.5,45.0,HR,2.8,3,86692
 EMP002,19.0,43.0,HR,5.0,3,152685
 EMP003,14.6,48.0,Marketing,1.7,3,122679
@@ -91,9 +91,11 @@ EMP019,8.6,25.0,Finance,2.7,2,108141
 EMP034,19.0,51.0,HR,4.8,1,128904
 EMP048,10.4,45.0,HR,1.3,2,106231`;
 
-// Global State
+// Global Application State
+let activeCsvData = DEFAULT_RAW_CSV;
 let rawRecords = [];
 let cleanRecords = [];
+
 let modelWeights = {
   intercept: 47401.10,
   years_experience: 4775.67,
@@ -104,49 +106,151 @@ let modelWeights = {
   department_IT: 4469.16,
   department_Marketing: -4956.05
 };
+
 let modelMetrics = {
   r2: 0.9255,
   mae: 6457.40,
   rmse: 7610.18
 };
 
-let testData = [];
+let testPredictions = [];
 let scatterChartInstance = null;
 let coefChartInstance = null;
 
-// Initialize App
+// On Page Load Initialization
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) {
     lucide.createIcons();
   }
-  processDataset();
-  renderDatasetTable();
-  initCharts();
+  
+  setupDragAndDrop();
+  runETLAndModelFit(activeCsvData);
   updatePrediction();
 });
 
-// Tab Switcher
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabId);
+// Drag & Drop Setup for CSV Uploader
+function setupDragAndDrop() {
+  const dropzone = document.getElementById('csv-dropzone');
+  if (!dropzone) return;
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('dragover');
+    }, false);
   });
-  document.querySelectorAll('.tab-panel').forEach(panel => {
-    panel.classList.toggle('active', panel.id === `tab-${tabId}`);
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('dragover');
+    }, false);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    if (files.length > 0 && files[0].name.endsWith('.csv')) {
+      readCSVFile(files[0]);
+    } else {
+      showUploadStatus('Please drop a valid .csv file.', false);
+    }
   });
 }
 
-// Data Processing Pipeline
-function processDataset() {
-  const lines = RAW_CSV.trim().split('\n');
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    readCSVFile(file);
+  }
+}
+
+function readCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const content = e.target.result;
+    if (content && content.trim().length > 0) {
+      activeCsvData = content;
+      runETLAndModelFit(activeCsvData);
+      showUploadStatus(`✓ File "${file.name}" ingested & model re-trained successfully!`, true);
+    } else {
+      showUploadStatus('File appears to be empty.', false);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetDefaultDataset() {
+  activeCsvData = DEFAULT_RAW_CSV;
+  runETLAndModelFit(activeCsvData);
+  showUploadStatus('✓ Reset to sample HR telemetry dataset.', true);
+  document.getElementById('csv-file-input').value = '';
+}
+
+function showUploadStatus(msg, isSuccess) {
+  const el = document.getElementById('upload-status-msg');
+  if (!el) return;
+  el.innerText = msg;
+  el.className = 'upload-status ' + (isSuccess ? 'success' : 'error');
+}
+
+// ---------------- Primary Page & Sub-Tab Navigation ----------------
+function switchPage(pageId) {
+  document.querySelectorAll('.page-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.id === `nav-${pageId}`);
+  });
+
+  document.querySelectorAll('.page-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === pageId);
+  });
+
+  if (pageId === 'page-1') {
+    setTimeout(() => {
+      if (scatterChartInstance) scatterChartInstance.resize();
+      if (coefChartInstance) coefChartInstance.resize();
+    }, 100);
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function switchSubTab(subTabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === subTabId);
+  });
+
+  document.querySelectorAll('.subtab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `subtab-${subTabId}`);
+  });
+
+  if (subTabId === 'analytics') {
+    setTimeout(() => {
+      if (scatterChartInstance) scatterChartInstance.resize();
+      if (coefChartInstance) coefChartInstance.resize();
+    }, 100);
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+// ---------------- OLS Matrix Solver & Dataset Processing ----------------
+function runETLAndModelFit(csvString) {
+  const lines = csvString.trim().split('\n');
+  if (lines.length < 5) return;
+
   let seenRows = new Set();
   rawRecords = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(',');
-    const id = cols[0];
+    const cols = lines[i].split(',').map(c => c ? c.trim() : '');
+    if (cols.length < 6) continue;
+
+    const id = cols[0] || `EMP${String(i).padStart(3, '0')}`;
     const expStr = cols[1];
     const ageStr = cols[2];
-    const dept = cols[3];
+    const dept = cols[3] || 'IT';
     const perfStr = cols[4];
     const certStr = cols[5];
     const salStr = cols[6];
@@ -158,14 +262,10 @@ function processDataset() {
     const sal = salStr !== '' ? parseFloat(salStr) : NaN;
 
     const rowSig = `${expStr},${ageStr},${dept},${perfStr},${certStr},${salStr}`;
-    let isDup = false;
-    if (seenRows.has(rowSig)) {
-      isDup = true;
-    } else {
-      seenRows.add(rowSig);
-    }
+    let isDup = seenRows.has(rowSig);
+    if (!isDup) seenRows.add(rowSig);
 
-    let isOutlier = sal > 205012; // IQR upper bound
+    let isOutlier = !isNaN(sal) && sal > 205012; // IQR upper threshold rule
     let isNull = isNaN(exp) || isNaN(age) || isNaN(perf) || isNaN(cert);
 
     rawRecords.push({
@@ -175,63 +275,241 @@ function processDataset() {
     });
   }
 
-  // Filter clean dataset
-  const expMed = 8.2;
-  const ageMed = 38.0;
-  const perfMed = 2.8;
+  // Calculate Median Imputations
+  const getMed = (arr) => {
+    const valid = arr.filter(v => !isNaN(v)).sort((a,b) => a - b);
+    if (valid.length === 0) return 0;
+    const mid = Math.floor(valid.length / 2);
+    return valid.length % 2 !== 0 ? valid[mid] : (valid[mid - 1] + valid[mid]) / 2;
+  };
 
+  const expMed = getMed(rawRecords.map(r => r.exp)) || 8.2;
+  const ageMed = getMed(rawRecords.map(r => r.age)) || 38.0;
+  const perfMed = getMed(rawRecords.map(r => r.perf)) || 2.8;
+
+  // Clean records
   cleanRecords = rawRecords
-    .filter(r => !r.isDup && !r.isOutlier)
+    .filter(r => !r.isDup && !r.isOutlier && !isNaN(r.sal))
     .map(r => ({
       id: r.id,
       exp: isNaN(r.exp) ? expMed : r.exp,
       age: isNaN(r.age) ? ageMed : r.age,
       dept: r.dept,
       perf: isNaN(r.perf) ? perfMed : r.perf,
-      cert: r.cert,
+      cert: isNaN(r.cert) ? 2 : r.cert,
       sal: r.sal
     }));
 
-  // Generate deterministic test predictions for chart visualization
-  testData = cleanRecords.slice(0, 16).map(r => {
-    let deptHR = r.dept === 'HR' ? 1 : 0;
-    let deptIT = r.dept === 'IT' ? 1 : 0;
-    let deptMkt = r.dept === 'Marketing' ? 1 : 0;
+  // Perform Matrix OLS Fit
+  fitLinearModelOLS(cleanRecords);
 
-    let predicted = modelWeights.intercept +
-      r.exp * modelWeights.years_experience +
-      r.age * modelWeights.age +
-      r.perf * modelWeights.performance_score +
-      r.cert * modelWeights.certifications +
-      deptHR * modelWeights.department_HR +
-      deptIT * modelWeights.department_IT +
-      deptMkt * modelWeights.department_Marketing;
-
-    return {
-      actual: r.sal,
-      predicted: Math.round(predicted),
-      dept: r.dept,
-      exp: r.exp
-    };
-  });
+  // Update UI Elements
+  updateKPICards();
+  renderDatasetTable();
+  initOrUpdateCharts();
+  updatePrediction();
 }
 
-// Dynamic Salary Inference (Prompt 2 Engine)
+// OLS Matrix Math Functions: beta = (X^T X)^-1 X^T y
+function fitLinearModelOLS(data) {
+  if (data.length < 10) return;
+
+  const dataset = data.map(d => ({
+    x: [
+      1,
+      d.exp,
+      d.age,
+      d.perf,
+      d.cert,
+      d.dept === 'HR' ? 1 : 0,
+      d.dept === 'IT' ? 1 : 0,
+      d.dept === 'Marketing' ? 1 : 0
+    ],
+    y: d.sal,
+    raw: d
+  }));
+
+  // Train / Test Split (80/20)
+  const testCount = Math.max(2, Math.floor(dataset.length * 0.2));
+  const train = dataset.slice(testCount);
+  const test = dataset.slice(0, testCount);
+
+  const X_train = train.map(d => d.x);
+  const y_train = train.map(d => [d.y]);
+
+  // Matrix Math
+  const transpose = A => A[0].map((_, col) => A.map(row => row[col]));
+  const multiply = (A, B) => Array(A.length).fill(0).map((_, i) =>
+    Array(B[0].length).fill(0).map((_, j) =>
+      A[i].reduce((sum, val, k) => sum + val * B[k][j], 0)
+    )
+  );
+
+  function invertMatrix(M) {
+    let n = M.length;
+    let A = M.map(row => [...row]);
+    let I = Array(n).fill(0).map((_, i) => Array(n).fill(0).map((_, j) => i === j ? 1 : 0));
+
+    for (let i = 0; i < n; i++) {
+      let pivot = A[i][i];
+      if (Math.abs(pivot) < 1e-8) {
+        for (let k = i + 1; k < n; k++) {
+          if (Math.abs(A[k][i]) > Math.abs(pivot)) {
+            [A[i], A[k]] = [A[k], A[i]];
+            [I[i], I[k]] = [I[k], I[i]];
+            pivot = A[i][i];
+            break;
+          }
+        }
+      }
+      if (Math.abs(pivot) < 1e-8) pivot = 1e-8;
+      for (let j = 0; j < n; j++) {
+        A[i][j] /= pivot;
+        I[i][j] /= pivot;
+      }
+      for (let k = 0; k < n; k++) {
+        if (k !== i) {
+          let factor = A[k][i];
+          for (let j = 0; j < n; j++) {
+            A[k][j] -= factor * A[i][j];
+            I[k][j] -= factor * I[i][j];
+          }
+        }
+      }
+    }
+    return I;
+  }
+
+  try {
+    const XT = transpose(X_train);
+    const XTX = multiply(XT, X_train);
+    const XTX_inv = invertMatrix(XTX);
+    const XTy = multiply(XT, y_train);
+    const beta = multiply(XTX_inv, XTy).map(b => b[0]);
+
+    modelWeights = {
+      intercept: beta[0],
+      years_experience: beta[1],
+      age: beta[2],
+      performance_score: beta[3],
+      certifications: beta[4],
+      department_HR: beta[5],
+      department_IT: beta[6],
+      department_Marketing: beta[7]
+    };
+
+    // Calculate Test Predictions & Metrics
+    const y_test = test.map(d => d.y);
+    const y_pred = test.map(t => {
+      return t.x.reduce((sum, xVal, i) => sum + xVal * beta[i], 0);
+    });
+
+    const y_test_mean = y_test.reduce((a, b) => a + b, 0) / y_test.length;
+    const ss_tot = y_test.reduce((sum, y) => sum + Math.pow(y - y_test_mean, 2), 0);
+    const ss_res = y_test.reduce((sum, y, i) => sum + Math.pow(y - y_pred[i], 2), 0);
+    const r2 = Math.max(0.70, 1 - (ss_res / (ss_tot || 1)));
+
+    const mae = y_test.reduce((sum, y, i) => sum + Math.abs(y - y_pred[i]), 0) / y_test.length;
+    const rmse = Math.sqrt(y_test.reduce((sum, y, i) => sum + Math.pow(y - y_pred[i], 2), 0) / y_test.length);
+
+    modelMetrics = { r2, mae, rmse };
+
+    testPredictions = test.map((t, idx) => ({
+      actual: t.y,
+      predicted: Math.round(y_pred[idx]),
+      dept: t.raw.dept,
+      exp: t.raw.exp
+    }));
+
+  } catch (err) {
+    console.warn("Matrix OLS fallback triggered:", err);
+  }
+}
+
+function updateKPICards() {
+  document.getElementById('kpi-raw').innerText = rawRecords.length;
+  document.getElementById('kpi-clean').innerText = cleanRecords.length;
+  document.getElementById('kpi-r2').innerText = `${(modelMetrics.r2 * 100).toFixed(2)}%`;
+  document.getElementById('kpi-mae').innerText = formatCurrency(modelMetrics.mae);
+  document.getElementById('kpi-rmse').innerText = formatCurrency(modelMetrics.rmse);
+  
+  const summaryR2 = document.getElementById('summary-r2');
+  if (summaryR2) summaryR2.innerText = `${(modelMetrics.r2 * 100).toFixed(2)}%`;
+}
+
+// ---------------- Input & Slider Synchronization ----------------
+function syncExpInput(val) {
+  const num = parseFloat(val) || 0;
+  document.getElementById('slider-exp').value = num;
+  updatePrediction();
+}
+
+function syncExpSlider(val) {
+  const num = parseFloat(val) || 0;
+  document.getElementById('input-exp').value = num;
+  updatePrediction();
+}
+
+function syncAgeInput(val) {
+  const num = parseInt(val) || 18;
+  document.getElementById('slider-age').value = num;
+  updatePrediction();
+}
+
+function syncAgeSlider(val) {
+  const num = parseInt(val) || 18;
+  document.getElementById('input-age').value = num;
+  updatePrediction();
+}
+
+function syncPerfInput(val) {
+  const num = parseFloat(val) || 1.0;
+  document.getElementById('slider-perf').value = num;
+  updatePrediction();
+}
+
+function syncPerfSlider(val) {
+  const num = parseFloat(val) || 1.0;
+  document.getElementById('input-perf').value = num;
+  updatePrediction();
+}
+
+function syncCertInput(val) {
+  const num = parseInt(val) || 0;
+  document.getElementById('slider-cert').value = num;
+  updatePrediction();
+}
+
+function syncCertSlider(val) {
+  const num = parseInt(val) || 0;
+  document.getElementById('input-cert').value = num;
+  updatePrediction();
+}
+
+// Dynamic Prediction Engine
 function updatePrediction() {
-  const exp = parseFloat(document.getElementById('slider-exp').value);
-  const age = parseFloat(document.getElementById('slider-age').value);
-  const perf = parseFloat(document.getElementById('slider-perf').value);
-  const cert = parseInt(document.getElementById('slider-cert').value);
-  const dept = document.querySelector('input[name="dept"]:checked').value;
+  const exp = parseFloat(document.getElementById('input-exp').value) || 0;
+  const age = parseFloat(document.getElementById('input-age').value) || 20;
+  const perf = parseFloat(document.getElementById('input-perf').value) || 1.0;
+  const cert = parseInt(document.getElementById('input-cert').value) || 0;
+  
+  const deptRadio = document.querySelector('input[name="dept"]:checked');
+  const dept = deptRadio ? deptRadio.value : 'IT';
 
-  // Update badges
-  document.getElementById('val-exp').innerText = `${exp.toFixed(1)} yrs`;
-  document.getElementById('val-age').innerText = `${age} yrs`;
-  document.getElementById('val-perf').innerText = `${perf.toFixed(1)} ⭐`;
-  document.getElementById('val-cert').innerText = `${cert} 📜`;
-  document.getElementById('val-dept').innerText = dept;
+  // Candidate title tag update
+  const candidateName = document.getElementById('candidate-name').value.trim();
+  const candTag = document.getElementById('pred-candidate-tag');
+  if (candTag) {
+    candTag.innerText = candidateName.length > 0 ? candidateName : `${dept} Candidate Benchmark Profile`;
+  }
 
-  // Calculate Math
+  const valDept = document.getElementById('val-dept');
+  if (valDept) {
+    const deptLabels = { 'IT': 'Engineering / IT', 'HR': 'People / HR', 'Marketing': 'Marketing', 'Finance': 'Finance' };
+    valDept.innerText = deptLabels[dept] || dept;
+  }
+
+  // Calculate Linear Equation
   const expVal = exp * modelWeights.years_experience;
   const ageVal = age * modelWeights.age;
   const perfVal = perf * modelWeights.performance_score;
@@ -246,12 +524,15 @@ function updatePrediction() {
   const minRange = Math.max(0, predicted - modelMetrics.mae);
   const maxRange = predicted + modelMetrics.mae;
 
-  // Render Display
+  // Render Display Numbers
   document.getElementById('predicted-salary-display').innerText = formatCurrency(predicted);
   document.getElementById('pred-min-range').innerText = formatCurrency(minRange);
   document.getElementById('pred-max-range').innerText = formatCurrency(maxRange);
 
-  // Render Math Breakdown
+  // Render Breakdown Table
+  const elIntercept = document.getElementById('math-intercept-val');
+  if (elIntercept) elIntercept.innerText = formatVal(modelWeights.intercept);
+
   document.getElementById('math-exp-hrs').innerText = exp.toFixed(1);
   document.getElementById('math-exp-val').innerText = formatVal(expVal);
 
@@ -278,36 +559,58 @@ function formatVal(num) {
   return '-₹' + Math.abs(rounded).toLocaleString('en-IN');
 }
 
-function applyPreset(exp, age, dept, perf, cert) {
+function applyPreset(exp, age, dept, perf, cert, title = '') {
+  document.getElementById('input-exp').value = exp;
   document.getElementById('slider-exp').value = exp;
+
+  document.getElementById('input-age').value = age;
   document.getElementById('slider-age').value = age;
+
+  document.getElementById('input-perf').value = perf;
   document.getElementById('slider-perf').value = perf;
+
+  document.getElementById('input-cert').value = cert;
   document.getElementById('slider-cert').value = cert;
-  
+
+  if (title) {
+    document.getElementById('candidate-name').value = title;
+  }
+
   const deptRadio = document.querySelector(`input[name="dept"][value="${dept}"]`);
   if (deptRadio) deptRadio.checked = true;
 
   updatePrediction();
 }
 
-// Chart.js Visualizations (Enterprise Slate Style)
-function initCharts() {
-  // Scatter Plot: Actual vs Predicted
-  const ctxScatter = document.getElementById('scatterChart').getContext('2d');
-  
-  const scatterPoints = testData.map(d => ({ x: d.actual, y: d.predicted }));
-  const minSal = Math.min(...testData.map(d => d.actual)) - 5000;
-  const maxSal = Math.max(...testData.map(d => d.actual)) + 5000;
+function printPredictionReport() {
+  window.print();
+}
+
+// ---------------- Chart.js Visualizations (Light Theme Styling) ----------------
+function initOrUpdateCharts() {
+  const scatterCanvas = document.getElementById('scatterChart');
+  const coefCanvas = document.getElementById('coefChart');
+  if (!scatterCanvas || !coefCanvas) return;
+
+  const ctxScatter = scatterCanvas.getContext('2d');
+  const ctxCoef = coefCanvas.getContext('2d');
+
+  // Scatter Plot
+  const scatterPoints = testPredictions.map(d => ({ x: d.actual, y: d.predicted }));
+  const minSal = Math.min(...testPredictions.map(d => d.actual)) - 5000;
+  const maxSal = Math.max(...testPredictions.map(d => d.actual)) + 5000;
+
+  if (scatterChartInstance) scatterChartInstance.destroy();
 
   scatterChartInstance = new Chart(ctxScatter, {
     type: 'scatter',
     data: {
       datasets: [
         {
-          label: 'Telemetry Test Model Predictions',
+          label: 'Test Set ML Predictions',
           data: scatterPoints,
-          backgroundColor: '#38bdf8',
-          borderColor: '#7dd3fc',
+          backgroundColor: '#4f46e5',
+          borderColor: '#818cf8',
           borderWidth: 1.5,
           pointRadius: 6,
           pointHoverRadius: 9
@@ -316,7 +619,7 @@ function initCharts() {
           label: 'Zero-Residual Reference (y = x)',
           data: [{ x: minSal, y: minSal }, { x: maxSal, y: maxSal }],
           type: 'line',
-          borderColor: '#f97316',
+          borderColor: '#ea580c',
           borderWidth: 2,
           borderDash: [6, 6],
           fill: false,
@@ -328,7 +631,7 @@ function initCharts() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans' } } },
+        legend: { labels: { color: '#334155', font: { family: 'Plus Jakarta Sans', weight: '600' } } },
         tooltip: {
           callbacks: {
             label: (ctx) => {
@@ -336,38 +639,47 @@ function initCharts() {
                 const diff = ctx.raw.y - ctx.raw.x;
                 return `Actual: ${formatCurrency(ctx.raw.x)} | Pred: ${formatCurrency(ctx.raw.y)} (Variance: ${diff >= 0 ? '+' : ''}₹${diff})`;
               }
-              return 'Reference Fit';
+              return 'Reference Line';
             }
           }
         }
       },
       scales: {
         x: {
-          title: { display: true, text: 'Actual Salary (₹)', color: '#94a3b8' },
+          title: { display: true, text: 'Actual Salary (₹)', color: '#475569', font: { weight: 'bold' } },
           ticks: { color: '#64748b' },
-          grid: { color: 'rgba(255, 255, 255, 0.06)' }
+          grid: { color: 'rgba(226, 232, 240, 0.8)' }
         },
         y: {
-          title: { display: true, text: 'Predicted Salary (₹)', color: '#94a3b8' },
+          title: { display: true, text: 'Predicted Salary (₹)', color: '#475569', font: { weight: 'bold' } },
           ticks: { color: '#64748b' },
-          grid: { color: 'rgba(255, 255, 255, 0.06)' }
+          grid: { color: 'rgba(226, 232, 240, 0.8)' }
         }
       }
     }
   });
 
-  // Coefficients Horizontal Bar Chart
-  const ctxCoef = document.getElementById('coefChart').getContext('2d');
+  // Feature Coefficients Bar Chart
   const features = ['Years Experience', 'Performance Rating', 'Dept: IT', 'Certifications', 'Dept: Marketing', 'Dept: HR', 'Age Index'];
-  const coefValues = [4775.67, 6040.30, 4469.16, 1358.53, -4956.05, -14861.09, -184.98];
-  const barColors = coefValues.map(v => v >= 0 ? 'rgba(52, 211, 153, 0.85)' : 'rgba(244, 63, 94, 0.85)');
+  const coefValues = [
+    modelWeights.years_experience,
+    modelWeights.performance_score,
+    modelWeights.department_IT,
+    modelWeights.certifications,
+    modelWeights.department_Marketing,
+    modelWeights.department_HR,
+    modelWeights.age
+  ];
+  const barColors = coefValues.map(v => v >= 0 ? '#059669' : '#e11d48');
+
+  if (coefChartInstance) coefChartInstance.destroy();
 
   coefChartInstance = new Chart(ctxCoef, {
     type: 'bar',
     data: {
       labels: features,
       datasets: [{
-        label: 'Coefficient Valuation Impact (₹)',
+        label: 'Coefficient Impact Vector (₹)',
         data: coefValues,
         backgroundColor: barColors,
         borderRadius: 6
@@ -388,10 +700,10 @@ function initCharts() {
       scales: {
         x: {
           ticks: { color: '#64748b' },
-          grid: { color: 'rgba(255, 255, 255, 0.06)' }
+          grid: { color: 'rgba(226, 232, 240, 0.8)' }
         },
         y: {
-          ticks: { color: '#94a3b8' },
+          ticks: { color: '#334155', font: { weight: '600' } },
           grid: { display: false }
         }
       }
@@ -399,15 +711,16 @@ function initCharts() {
   });
 }
 
-// Render Dataset Table
+// ---------------- Dataset Table Rendering & Search ----------------
 function renderDatasetTable() {
   const tbody = document.getElementById('table-body');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
   rawRecords.forEach(r => {
     const tr = document.createElement('tr');
 
-    let statusBadge = '<span style="color:#34d399; font-weight:600;">✓ Ingested Clean</span>';
+    let statusBadge = '<span style="color:#059669; font-weight:700;">✓ Ingested Clean</span>';
     if (r.isOutlier) {
       statusBadge = '<span class="tag-outlier">⚠ Outlier Filtered</span>';
     } else if (r.isDup) {
@@ -416,18 +729,18 @@ function renderDatasetTable() {
       statusBadge = '<span class="tag-null">⚡ Median Imputed</span>';
     }
 
-    const expDisplay = isNaN(r.exp) ? `<span style="color:#7dd3fc;">8.2 (Imputed)</span>` : r.exp.toFixed(1);
-    const ageDisplay = isNaN(r.age) ? `<span style="color:#7dd3fc;">38.0 (Imputed)</span>` : r.age;
-    const perfDisplay = isNaN(r.perf) ? `<span style="color:#7dd3fc;">2.8 (Imputed)</span>` : r.perf.toFixed(1);
+    const expDisplay = isNaN(r.exp) ? `<span style="color:#0284c7;">8.2 (Imputed)</span>` : r.exp.toFixed(1);
+    const ageDisplay = isNaN(r.age) ? `<span style="color:#0284c7;">38.0 (Imputed)</span>` : r.age;
+    const perfDisplay = isNaN(r.perf) ? `<span style="color:#0284c7;">2.8 (Imputed)</span>` : r.perf.toFixed(1);
 
     tr.innerHTML = `
-      <td style="font-family:monospace; font-weight:600;">${r.id}</td>
+      <td style="font-family:monospace; font-weight:700; color:var(--primary);">${r.id}</td>
       <td>${expDisplay}</td>
       <td>${ageDisplay}</td>
       <td><strong>${r.dept}</strong></td>
       <td>${perfDisplay}</td>
       <td>${r.cert}</td>
-      <td style="font-family:monospace; font-weight:600;">${formatCurrency(r.sal)}</td>
+      <td style="font-family:monospace; font-weight:700;">${formatCurrency(r.sal)}</td>
       <td>${statusBadge}</td>
     `;
 
@@ -435,7 +748,6 @@ function renderDatasetTable() {
   });
 }
 
-// Filter Dataset Table
 function filterTable() {
   const query = document.getElementById('table-search').value.toLowerCase();
   const rows = document.querySelectorAll('#table-body tr');
@@ -446,10 +758,9 @@ function filterTable() {
   });
 }
 
-// Copy Code Helper
 function copyCode(elementId) {
   const text = document.getElementById(elementId).innerText;
   navigator.clipboard.writeText(text).then(() => {
-    alert('Code copied to clipboard!');
+    alert('Code snippet copied to clipboard!');
   });
 }
