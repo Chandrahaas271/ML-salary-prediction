@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEXUS HR AI — Enterprise Compensation Intelligence & ML Predictor</title>
-  
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet">
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <!-- Ambient Light Mesh Background -->
@@ -27,7 +31,7 @@
   <div class="glow-spot spot-2"></div>
 
   <div class="app-container">
-    
+
     <!-- Top Enterprise Header Component -->
     <header class="header">
       <div class="brand-wrapper">
@@ -45,7 +49,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Primary Top Page Switcher -->
       <div class="page-switcher">
         <button class="page-btn active" id="nav-page-1" onclick="switchPage('page-1')">
@@ -107,7 +111,7 @@
 
     <!-- ================= PAGE 1: UPLOADED DATASET & MODEL OVERVIEW ================= -->
     <div id="page-1" class="page-panel active">
-      
+
       <!-- Dataset Management & File Uploader Panel -->
       <section class="glass-panel uploader-section">
         <div class="uploader-header">
@@ -115,7 +119,8 @@
             <h2 class="panel-title">
               <i data-lucide="upload-cloud" style="color: var(--primary);"></i> Ingest & Upload Dataset (.CSV)
             </h2>
-            <p class="panel-subtitle">Upload your custom dataset file or explore the currently loaded compensation data</p>
+            <p class="panel-subtitle">Upload your custom dataset file or explore the currently loaded compensation data
+            </p>
           </div>
           <div class="uploader-actions">
             <button class="btn btn-secondary" onclick="resetDefaultDataset()">
@@ -128,7 +133,8 @@
         </div>
 
         <div class="dropzone" id="csv-dropzone" onclick="document.getElementById('csv-file-input').click()">
-          <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleFileUpload(event)">
+          <input type="file" id="csv-file-input" accept=".csv" style="display: none;"
+            onchange="handleFileUpload(event)">
           <div class="dropzone-icon">
             <i data-lucide="file-spreadsheets"></i>
           </div>
@@ -136,7 +142,8 @@
             <strong>Click to upload custom CSV dataset</strong> or drag & drop file here
           </div>
           <div class="dropzone-hint">
-            Required CSV headers: <code>employee_id, years_experience, age, department, performance_score, certifications, monthly_salary</code>
+            Required CSV headers:
+            <code>employee_id, years_experience, age, department, performance_score, certifications, monthly_salary</code>
           </div>
         </div>
         <div id="upload-status-msg" class="upload-status"></div>
@@ -166,12 +173,15 @@
         <div class="glass-panel">
           <div class="table-controls">
             <div>
-              <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="table"></i> Telemetry Data Explorer</h3>
-              <p class="panel-subtitle" style="margin-bottom: 0;">Explore raw employee records, deduplication flags, median imputations, and outlier tags</p>
+              <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="table"></i> Telemetry Data Explorer
+              </h3>
+              <p class="panel-subtitle" style="margin-bottom: 0;">Explore raw employee records, deduplication flags,
+                median imputations, and outlier tags</p>
             </div>
             <div class="table-search-box">
               <i data-lucide="search"></i>
-              <input type="text" id="table-search" class="search-input" placeholder="Search ID, Dept, Exp..." oninput="filterTable()">
+              <input type="text" id="table-search" class="search-input" placeholder="Search ID, Dept, Exp..."
+                oninput="filterTable()">
             </div>
           </div>
 
@@ -200,14 +210,16 @@
       <!-- SUB TAB 2: MODEL ANALYTICS & CHARTS -->
       <div id="subtab-analytics" class="subtab-panel">
         <div class="analytics-grid">
-          
+
           <!-- Scatter Plot -->
           <div class="glass-panel">
             <h3 class="panel-title" style="font-size: 1.1rem;">
-              <i data-lucide="scatter-chart" style="color: var(--primary);"></i> Actual vs. Predicted Salary Distribution
+              <i data-lucide="scatter-chart" style="color: var(--primary);"></i> Actual vs. Predicted Salary
+              Distribution
             </h3>
-            <p class="panel-subtitle">Holdout test set evaluation. Orange dashed reference denotes perfect linear fit (y = x)</p>
-            
+            <p class="panel-subtitle">Holdout test set evaluation. Orange dashed reference denotes perfect linear fit (y
+              = x)</p>
+
             <div class="chart-container">
               <canvas id="scatterChart"></canvas>
             </div>
@@ -219,7 +231,7 @@
               <i data-lucide="bar-chart-2" style="color: var(--accent-cyan);"></i> Feature Coefficients & Impact Vector
             </h3>
             <p class="panel-subtitle">Calculated via OLS matrix equation: β = (XᵀX)⁻¹ Xᵀy</p>
-            
+
             <div class="chart-container">
               <canvas id="coefChart"></canvas>
             </div>
@@ -231,19 +243,23 @@
       <!-- SUB TAB 3: DATA PIPELINE -->
       <div id="subtab-pipeline" class="subtab-panel">
         <div class="glass-panel" style="margin-bottom: 24px;">
-          <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="workflow"></i> Automated Data Cleaning & ETL Pipeline</h3>
-          <p class="panel-subtitle" style="margin-bottom:0;">6-step automated transformation pipeline applied to dataset</p>
+          <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="workflow"></i> Automated Data Cleaning &
+            ETL Pipeline</h3>
+          <p class="panel-subtitle" style="margin-bottom:0;">6-step automated transformation pipeline applied to dataset
+          </p>
         </div>
 
         <div class="pipeline-steps">
-          
+
           <div class="step-card">
             <div class="step-number">1</div>
             <div>
               <div class="step-title">Identifier Column Stripping (`employee_id`)</div>
-              <div class="step-desc">`employee_id` is a non-predictive tracking code. Retaining it causes overfitting.</div>
+              <div class="step-desc">`employee_id` is a non-predictive tracking code. Retaining it causes overfitting.
+              </div>
               <div class="code-inline">df.drop('employee_id', axis=1, inplace=True)</div>
-              <div class="step-output"><i data-lucide="check-circle"></i> Output: Tracking identifier purged from feature set</div>
+              <div class="step-output"><i data-lucide="check-circle"></i> Output: Tracking identifier purged from
+                feature set</div>
             </div>
           </div>
 
@@ -251,7 +267,8 @@
             <div class="step-number">2</div>
             <div>
               <div class="step-title">Deduplication Engine</div>
-              <div class="step-desc">Eliminates identical duplicate employee records that distort variance calculations.</div>
+              <div class="step-desc">Eliminates identical duplicate employee records that distort variance calculations.
+              </div>
               <div class="code-inline">df.drop_duplicates(inplace=True)</div>
               <div class="step-output"><i data-lucide="check-circle"></i> Output: Duplicate rows detected & purged</div>
             </div>
@@ -261,9 +278,12 @@
             <div class="step-number">3</div>
             <div>
               <div class="step-title">Type Coercion for Performance Score</div>
-              <div class="step-desc">Casts raw string values and whitespaces to IEEE float64 format, coercing corrupted entries to NaN.</div>
-              <div class="code-inline">df['performance_score'] = pd.to_numeric(df['performance_score'], errors='coerce')</div>
-              <div class="step-output"><i data-lucide="check-circle"></i> Output: Performance score field normalized to numeric float64</div>
+              <div class="step-desc">Casts raw string values and whitespaces to IEEE float64 format, coercing corrupted
+                entries to NaN.</div>
+              <div class="code-inline">df['performance_score'] = pd.to_numeric(df['performance_score'], errors='coerce')
+              </div>
+              <div class="step-output"><i data-lucide="check-circle"></i> Output: Performance score field normalized to
+                numeric float64</div>
             </div>
           </div>
 
@@ -272,8 +292,10 @@
             <div>
               <div class="step-title">Robust Median Imputation</div>
               <div class="step-desc">Replaces missing values (NaN) with non-skewed column medians.</div>
-              <div class="code-inline">df['years_experience'].fillna(df['years_experience'].median(), inplace=True)</div>
-              <div class="step-output"><i data-lucide="check-circle"></i> Output: Missing experience, age, and appraisal ratings imputed</div>
+              <div class="code-inline">df['years_experience'].fillna(df['years_experience'].median(), inplace=True)
+              </div>
+              <div class="step-output"><i data-lucide="check-circle"></i> Output: Missing experience, age, and appraisal
+                ratings imputed</div>
             </div>
           </div>
 
@@ -281,38 +303,44 @@
             <div class="step-number">5</div>
             <div>
               <div class="step-title">IQR Outlier Filtering</div>
-              <div class="step-desc">Filters extreme corrupt salary values exceeding Q3 + 1.5×IQR upper bound cutoff limit.</div>
+              <div class="step-desc">Filters extreme corrupt salary values exceeding Q3 + 1.5×IQR upper bound cutoff
+                limit.</div>
               <div class="code-inline">df = df[(df['monthly_salary'] >= lower) & (df['monthly_salary'] <= upper)]</div>
-              <div class="step-output"><i data-lucide="check-circle"></i> Output: Extreme salary outliers purged from model fit</div>
+                  <div class="step-output"><i data-lucide="check-circle"></i> Output: Extreme salary outliers purged
+                    from model fit</div>
+              </div>
             </div>
-          </div>
 
-          <div class="step-card">
-            <div class="step-number">6</div>
-            <div>
-              <div class="step-title">Department One-Hot Encoding (`drop_first=True`)</div>
-              <div class="step-desc">Converts categorical department names into binary indicator vectors to prevent dummy variable trap.</div>
-              <div class="code-inline">df = pd.get_dummies(df, columns=['department'], drop_first=True)</div>
-              <div class="step-output"><i data-lucide="check-circle"></i> Output: Department dummy variable encoding completed</div>
+            <div class="step-card">
+              <div class="step-number">6</div>
+              <div>
+                <div class="step-title">Department One-Hot Encoding (`drop_first=True`)</div>
+                <div class="step-desc">Converts categorical department names into binary indicator vectors to prevent
+                  dummy variable trap.</div>
+                <div class="code-inline">df = pd.get_dummies(df, columns=['department'], drop_first=True)</div>
+                <div class="step-output"><i data-lucide="check-circle"></i> Output: Department dummy variable encoding
+                  completed</div>
+              </div>
             </div>
+
           </div>
-
-        </div>
-      </div>
-
-      <!-- SUB TAB 4: COLAB NOTEBOOK VIEWER -->
-      <div id="subtab-notebook" class="subtab-panel">
-        <div class="glass-panel" style="margin-bottom: 24px;">
-          <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="code-2"></i> Production Python Code Pipeline</h3>
-          <p class="panel-subtitle" style="margin-bottom:0;">Google Colab notebook code formatted with inline comments</p>
         </div>
 
-        <div class="code-block-wrapper">
-          <div class="code-header">
-            <span>Cell 1: Telemetry Data Exploration</span>
-            <button class="copy-btn" onclick="copyCode('code-cell-1')"><i data-lucide="copy"></i> Copy</button>
+        <!-- SUB TAB 4: COLAB NOTEBOOK VIEWER -->
+        <div id="subtab-notebook" class="subtab-panel">
+          <div class="glass-panel" style="margin-bottom: 24px;">
+            <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="code-2"></i> Production Python Code
+              Pipeline</h3>
+            <p class="panel-subtitle" style="margin-bottom:0;">Google Colab notebook code formatted with inline comments
+            </p>
           </div>
-          <pre><code id="code-cell-1"># 1. Explore Raw Telemetry Data
+
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>Cell 1: Telemetry Data Exploration</span>
+              <button class="copy-btn" onclick="copyCode('code-cell-1')"><i data-lucide="copy"></i> Copy</button>
+            </div>
+            <pre><code id="code-cell-1"># 1. Explore Raw Telemetry Data
 print('Shape of raw dataset:', df.shape)
 print('\n--- Info Summary ---')
 df.info()
@@ -322,14 +350,14 @@ print('\nDuplicate rows count:', df.duplicated().sum())
 
 # Display descriptive statistics
 df.describe()</code></pre>
-        </div>
-
-        <div class="code-block-wrapper">
-          <div class="code-header">
-            <span>Cell 2: Data Cleaning & Transformations</span>
-            <button class="copy-btn" onclick="copyCode('code-cell-2')"><i data-lucide="copy"></i> Copy</button>
           </div>
-          <pre><code id="code-cell-2"># Step 1 — Drop identifier column
+
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>Cell 2: Data Cleaning & Transformations</span>
+              <button class="copy-btn" onclick="copyCode('code-cell-2')"><i data-lucide="copy"></i> Copy</button>
+            </div>
+            <pre><code id="code-cell-2"># Step 1 — Drop identifier column
 df.drop('employee_id', axis=1, inplace=True)
 
 # Step 2 — Purge duplicate records
@@ -352,14 +380,14 @@ df = df[df['monthly_salary'] <= upper_bound]
 # Step 6 — One-hot encoding
 df = pd.get_dummies(df, columns=['department'], drop_first=True)
 print("Clean dataset features:", list(df.columns))</code></pre>
-        </div>
-
-        <div class="code-block-wrapper">
-          <div class="code-header">
-            <span>Cell 3: Linear Regression Fitting</span>
-            <button class="copy-btn" onclick="copyCode('code-cell-3')"><i data-lucide="copy"></i> Copy</button>
           </div>
-          <pre><code id="code-cell-3">from sklearn.model_selection import train_test_split
+
+          <div class="code-block-wrapper">
+            <div class="code-header">
+              <span>Cell 3: Linear Regression Fitting</span>
+              <button class="copy-btn" onclick="copyCode('code-cell-3')"><i data-lucide="copy"></i> Copy</button>
+            </div>
+            <pre><code id="code-cell-3">from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
@@ -377,246 +405,268 @@ y_pred = model.predict(X_test)
 print(f"R² Score: {r2_score(y_test, y_pred):.4f}")
 print(f"MAE: ₹{mean_absolute_error(y_test, y_pred):,.2f}")
 print(f"RMSE: ₹{np.sqrt(mean_squared_error(y_test, y_pred)):,.2f}")</code></pre>
+          </div>
         </div>
+
+        <!-- SUB TAB 5: STRATEGIC INSIGHTS -->
+        <div id="subtab-insights" class="subtab-panel">
+          <div class="glass-panel" style="margin-bottom: 24px;">
+            <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="lightbulb"></i> Executive Compensation
+              Strategy</h3>
+            <p class="panel-subtitle" style="margin-bottom:0;">Strategic HR insights derived from linear coefficient
+              weight vectors</p>
+          </div>
+
+          <div class="insights-grid">
+
+            <div class="insight-card">
+              <div class="insight-icon" style="background: rgba(79, 70, 229, 0.1); color: var(--primary);">
+                <i data-lucide="trending-up"></i>
+              </div>
+              <h4 class="insight-title">1. Primary Valuation Drivers</h4>
+              <p class="insight-body">
+                <strong>Years of Experience</strong> is the single largest linear driver of monthly salary (~₹4,775 per
+                year of tenure), followed by <strong>Performance Appraisal rating</strong> (~₹6,040 per rating point).
+              </p>
+            </div>
+
+            <div class="insight-card">
+              <div class="insight-icon" style="background: rgba(5, 150, 105, 0.1); color: var(--accent-emerald);">
+                <i data-lucide="check-circle-2"></i>
+              </div>
+              <h4 class="insight-title">2. High Model Precision</h4>
+              <p class="insight-body">
+                Achieving an <strong>R² score of 92.55%</strong> with a low mean absolute error (MAE) of
+                <strong>₹6,457</strong> ensures high reliability for corporate benchmarking and automated offer
+                generation.
+              </p>
+            </div>
+
+            <div class="insight-card">
+              <div class="insight-icon" style="background: rgba(217, 119, 6, 0.1); color: var(--accent-amber);">
+                <i data-lucide="shield-alert"></i>
+              </div>
+              <h4 class="insight-title">3. Departmental Differentials</h4>
+              <p class="insight-body">
+                Engineering/IT roles command a positive premium (+₹4,469), whereas People/HR roles reflect a structural
+                base offset (-₹14,861), reflecting current market compensation benchmarks.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
       </div>
 
-      <!-- SUB TAB 5: STRATEGIC INSIGHTS -->
-      <div id="subtab-insights" class="subtab-panel">
-        <div class="glass-panel" style="margin-bottom: 24px;">
-          <h3 class="panel-title" style="font-size: 1.1rem;"><i data-lucide="lightbulb"></i> Executive Compensation Strategy</h3>
-          <p class="panel-subtitle" style="margin-bottom:0;">Strategic HR insights derived from linear coefficient weight vectors</p>
-        </div>
+      <!-- ================= PAGE 2: MANUAL PREDICTION ENGINE ================= -->
+      <div id="page-2" class="page-panel">
 
-        <div class="insights-grid">
-          
-          <div class="insight-card">
-            <div class="insight-icon" style="background: rgba(79, 70, 229, 0.1); color: var(--primary);">
-              <i data-lucide="trending-up"></i>
-            </div>
-            <h4 class="insight-title">1. Primary Valuation Drivers</h4>
-            <p class="insight-body">
-              <strong>Years of Experience</strong> is the single largest linear driver of monthly salary (~₹4,775 per year of tenure), followed by <strong>Performance Appraisal rating</strong> (~₹6,040 per rating point).
-            </p>
-          </div>
+        <div class="predictor-grid">
 
-          <div class="insight-card">
-            <div class="insight-icon" style="background: rgba(5, 150, 105, 0.1); color: var(--accent-emerald);">
-              <i data-lucide="check-circle-2"></i>
-            </div>
-            <h4 class="insight-title">2. High Model Precision</h4>
-            <p class="insight-body">
-              Achieving an <strong>R² score of 92.55%</strong> with a low mean absolute error (MAE) of <strong>₹6,457</strong> ensures high reliability for corporate benchmarking and automated offer generation.
-            </p>
-          </div>
-
-          <div class="insight-card">
-            <div class="insight-icon" style="background: rgba(217, 119, 6, 0.1); color: var(--accent-amber);">
-              <i data-lucide="shield-alert"></i>
-            </div>
-            <h4 class="insight-title">3. Departmental Differentials</h4>
-            <p class="insight-body">
-              Engineering/IT roles command a positive premium (+₹4,469), whereas People/HR roles reflect a structural base offset (-₹14,861), reflecting current market compensation benchmarks.
-            </p>
-          </div>
-
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ================= PAGE 2: MANUAL PREDICTION ENGINE ================= -->
-    <div id="page-2" class="page-panel">
-      
-      <div class="predictor-grid">
-        
-        <!-- Controls & Manual Form Entry -->
-        <div class="glass-panel">
-          <div class="panel-header-badge">
-            <span class="badge-tag"><i data-lucide="user-check"></i> Manual Entry Form</span>
-          </div>
-          <h2 class="panel-title">
-            <i data-lucide="sliders" style="color: var(--primary);"></i> Enter Candidate Parameters Manually
-          </h2>
-          <p class="panel-subtitle">Manually type values or adjust sliders to compute real-time salary benchmarks</p>
-
-          <!-- Candidate Name / Title -->
-          <div class="form-group">
-            <label class="form-label" for="candidate-name">
-              <i data-lucide="file-text"></i> Candidate / Role Title (Optional)
-            </label>
-            <input type="text" id="candidate-name" class="text-input" placeholder="e.g. Alex Morgan — Senior Systems Analyst" oninput="updatePrediction()">
-          </div>
-
-          <!-- Years Experience: Numeric Input + Slider -->
-          <div class="form-group">
-            <div class="form-label-row">
-              <label class="form-label" for="input-exp">
-                <i data-lucide="briefcase"></i> Years of Experience
-              </label>
-              <div class="input-sync-wrapper">
-                <input type="number" id="input-exp" class="num-input" min="0" max="35" step="0.1" value="5.5" oninput="syncExpInput(this.value)">
-                <span class="val-unit">Yrs</span>
-              </div>
-            </div>
-            <input type="range" id="slider-exp" min="0" max="25" step="0.1" value="5.5" oninput="syncExpSlider(this.value)">
-          </div>
-
-          <!-- Age: Numeric Input + Slider -->
-          <div class="form-group">
-            <div class="form-label-row">
-              <label class="form-label" for="input-age">
-                <i data-lucide="user"></i> Employee Age
-              </label>
-              <div class="input-sync-wrapper">
-                <input type="number" id="input-age" class="num-input" min="18" max="70" step="1" value="32" oninput="syncAgeInput(this.value)">
-                <span class="val-unit">Yrs</span>
-              </div>
-            </div>
-            <input type="range" id="slider-age" min="20" max="65" step="1" value="32" oninput="syncAgeSlider(this.value)">
-          </div>
-
-          <!-- Department Selection -->
-          <div class="form-group">
-            <div class="form-label-row">
-              <label class="form-label">
-                <i data-lucide="building-2"></i> Department Category
-              </label>
-              <span class="val-badge" id="val-dept">Engineering / IT</span>
-            </div>
-            <div class="dept-selector">
-              <div class="dept-pill">
-                <input type="radio" id="dept-it" name="dept" value="IT" checked onchange="updatePrediction()">
-                <label for="dept-it"><i data-lucide="code"></i> Engineering / IT</label>
-              </div>
-              <div class="dept-pill">
-                <input type="radio" id="dept-hr" name="dept" value="HR" onchange="updatePrediction()">
-                <label for="dept-hr"><i data-lucide="users"></i> People / HR</label>
-              </div>
-              <div class="dept-pill">
-                <input type="radio" id="dept-mkt" name="dept" value="Marketing" onchange="updatePrediction()">
-                <label for="dept-mkt"><i data-lucide="trending-up"></i> Marketing</label>
-              </div>
-              <div class="dept-pill">
-                <input type="radio" id="dept-fin" name="dept" value="Finance" onchange="updatePrediction()">
-                <label for="dept-fin"><i data-lucide="landmark"></i> Finance</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Performance Score: Numeric Input + Slider -->
-          <div class="form-group">
-            <div class="form-label-row">
-              <label class="form-label" for="input-perf">
-                <i data-lucide="star"></i> Performance Appraisal Score
-              </label>
-              <div class="input-sync-wrapper">
-                <input type="number" id="input-perf" class="num-input" min="1.0" max="5.0" step="0.1" value="3.8" oninput="syncPerfInput(this.value)">
-                <span class="val-unit">⭐ / 5.0</span>
-              </div>
-            </div>
-            <input type="range" id="slider-perf" min="1.0" max="5.0" step="0.1" value="3.8" oninput="syncPerfSlider(this.value)">
-          </div>
-
-          <!-- Certifications Count: Numeric Input + Slider -->
-          <div class="form-group">
-            <div class="form-label-row">
-              <label class="form-label" for="input-cert">
-                <i data-lucide="award"></i> Certifications Count
-              </label>
-              <div class="input-sync-wrapper">
-                <input type="number" id="input-cert" class="num-input" min="0" max="10" step="1" value="3" oninput="syncCertInput(this.value)">
-                <span class="val-unit">📜 Count</span>
-              </div>
-            </div>
-            <input type="range" id="slider-cert" min="0" max="5" step="1" value="3" oninput="syncCertSlider(this.value)">
-          </div>
-
-          <!-- Quick Presets -->
-          <div class="presets-container">
-            <span class="preset-title">1-CLICK BENCHMARK CANDIDATES:</span>
-            <div class="presets-row">
-              <button class="preset-chip" onclick="applyPreset(2.0, 24, 'IT', 2.5, 1, 'Junior Software Engineer')">Junior Dev</button>
-              <button class="preset-chip" onclick="applyPreset(12.5, 42, 'IT', 4.7, 4, 'Principal Staff Architect')">Lead Architect</button>
-              <button class="preset-chip" onclick="applyPreset(8.0, 36, 'HR', 3.8, 2, 'HR Business Partner')">HR Partner</button>
-              <button class="preset-chip" onclick="applyPreset(15.0, 48, 'Finance', 4.9, 5, 'VP of Finance')">Finance Director</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Output Prediction Display Card -->
-        <div class="glass-panel result-panel">
-          <div>
+          <!-- Controls & Manual Form Entry -->
+          <div class="glass-panel">
             <div class="panel-header-badge">
-              <span class="badge-tag-success"><i data-lucide="check-circle-2"></i> ML Matrix Inference Output</span>
+              <span class="badge-tag"><i data-lucide="user-check"></i> Manual Entry Form</span>
             </div>
             <h2 class="panel-title">
-              <i data-lucide="cpu" style="color: var(--accent-cyan);"></i> Predicted Monthly Salary
+              <i data-lucide="sliders" style="color: var(--primary);"></i> Enter Candidate Parameters Manually
             </h2>
-            <p class="panel-subtitle">Ordinary Least Squares Regression Valuation Result</p>
+            <p class="panel-subtitle">Manually type values or adjust sliders to compute real-time salary benchmarks</p>
 
-            <div class="prediction-card">
-              <div class="candidate-tag" id="pred-candidate-tag">Standard Candidate Benchmark</div>
-              <span class="pred-tag">RECOMMENDED MONTHLY SALARY</span>
-              <div class="pred-amount" id="predicted-salary-display">₹98,420</div>
-              <div class="pred-range">
-                Statistical Confidence Range (±MAE): <span id="pred-min-range">₹91,962</span> – <span id="pred-max-range">₹1,04,877</span>
+            <!-- Candidate Name / Title -->
+            <div class="form-group">
+              <label class="form-label" for="candidate-name">
+                <i data-lucide="file-text"></i> Candidate / Role Title (Optional)
+              </label>
+              <input type="text" id="candidate-name" class="text-input"
+                placeholder="e.g. Alex Morgan — Senior Systems Analyst" oninput="updatePrediction()">
+            </div>
+
+            <!-- Years Experience: Numeric Input + Slider -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="input-exp">
+                  <i data-lucide="briefcase"></i> Years of Experience
+                </label>
+                <div class="input-sync-wrapper">
+                  <input type="number" id="input-exp" class="num-input" min="0" max="35" step="0.1" value="5.5"
+                    oninput="syncExpInput(this.value)">
+                  <span class="val-unit">Yrs</span>
+                </div>
+              </div>
+              <input type="range" id="slider-exp" min="0" max="25" step="0.1" value="5.5"
+                oninput="syncExpSlider(this.value)">
+            </div>
+
+            <!-- Age: Numeric Input + Slider -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="input-age">
+                  <i data-lucide="user"></i> Employee Age
+                </label>
+                <div class="input-sync-wrapper">
+                  <input type="number" id="input-age" class="num-input" min="18" max="70" step="1" value="32"
+                    oninput="syncAgeInput(this.value)">
+                  <span class="val-unit">Yrs</span>
+                </div>
+              </div>
+              <input type="range" id="slider-age" min="20" max="65" step="1" value="32"
+                oninput="syncAgeSlider(this.value)">
+            </div>
+
+            <!-- Department Selection -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label">
+                  <i data-lucide="building-2"></i> Department Category
+                </label>
+                <span class="val-badge" id="val-dept">Engineering / IT</span>
+              </div>
+              <div class="dept-selector">
+                <div class="dept-pill">
+                  <input type="radio" id="dept-it" name="dept" value="IT" checked onchange="updatePrediction()">
+                  <label for="dept-it"><i data-lucide="code"></i> Engineering / IT</label>
+                </div>
+                <div class="dept-pill">
+                  <input type="radio" id="dept-hr" name="dept" value="HR" onchange="updatePrediction()">
+                  <label for="dept-hr"><i data-lucide="users"></i> People / HR</label>
+                </div>
+                <div class="dept-pill">
+                  <input type="radio" id="dept-mkt" name="dept" value="Marketing" onchange="updatePrediction()">
+                  <label for="dept-mkt"><i data-lucide="trending-up"></i> Marketing</label>
+                </div>
+                <div class="dept-pill">
+                  <input type="radio" id="dept-fin" name="dept" value="Finance" onchange="updatePrediction()">
+                  <label for="dept-fin"><i data-lucide="landmark"></i> Finance</label>
+                </div>
               </div>
             </div>
 
-            <!-- Math Breakdown Matrix -->
-            <div class="math-breakdown">
-              <h4 class="breakdown-title">
-                <i data-lucide="binary"></i> Linear Model Coefficient Matrix Breakdown
-              </h4>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Base Model Intercept (β₀)</span>
-                <span class="breakdown-val val-plus" id="math-intercept-val">+₹47,401.10</span>
+            <!-- Performance Score: Numeric Input + Slider -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="input-perf">
+                  <i data-lucide="star"></i> Performance Appraisal Score
+                </label>
+                <div class="input-sync-wrapper">
+                  <input type="number" id="input-perf" class="num-input" min="1.0" max="5.0" step="0.1" value="3.8"
+                    oninput="syncPerfInput(this.value)">
+                  <span class="val-unit">⭐ / 5.0</span>
+                </div>
               </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Tenure (<span id="math-exp-hrs">5.5</span> yrs × ₹4,775.67)</span>
-                <span class="breakdown-val val-plus" id="math-exp-val">+₹26,266.19</span>
+              <input type="range" id="slider-perf" min="1.0" max="5.0" step="0.1" value="3.8"
+                oninput="syncPerfSlider(this.value)">
+            </div>
+
+            <!-- Certifications Count: Numeric Input + Slider -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label class="form-label" for="input-cert">
+                  <i data-lucide="award"></i> Certifications Count
+                </label>
+                <div class="input-sync-wrapper">
+                  <input type="number" id="input-cert" class="num-input" min="0" max="10" step="1" value="3"
+                    oninput="syncCertInput(this.value)">
+                  <span class="val-unit">📜 Count</span>
+                </div>
               </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Age Index (<span id="math-age-yrs">32</span> yrs × -₹184.98)</span>
-                <span class="breakdown-val val-minus" id="math-age-val">-₹5,919.36</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Performance Appraisal (<span id="math-perf-rating">3.8</span> × ₹6,040.30)</span>
-                <span class="breakdown-val val-plus" id="math-perf-val">+₹22,953.14</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Certifications (<span id="math-cert-cnt">3</span> × ₹1,358.53)</span>
-                <span class="breakdown-val val-plus" id="math-cert-val">+₹4,075.59</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="breakdown-label">Department Offset (<span id="math-dept-name">IT</span>)</span>
-                <span class="breakdown-val" id="math-dept-val">+₹4,469.16</span>
+              <input type="range" id="slider-cert" min="0" max="5" step="1" value="3"
+                oninput="syncCertSlider(this.value)">
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="presets-container">
+              <span class="preset-title">1-CLICK BENCHMARK CANDIDATES:</span>
+              <div class="presets-row">
+                <button class="preset-chip"
+                  onclick="applyPreset(2.0, 24, 'IT', 2.5, 1, 'Junior Software Engineer')">Junior Dev</button>
+                <button class="preset-chip"
+                  onclick="applyPreset(12.5, 42, 'IT', 4.7, 4, 'Principal Staff Architect')">Lead Architect</button>
+                <button class="preset-chip" onclick="applyPreset(8.0, 36, 'HR', 3.8, 2, 'HR Business Partner')">HR
+                  Partner</button>
+                <button class="preset-chip" onclick="applyPreset(15.0, 48, 'Finance', 4.9, 5, 'VP of Finance')">Finance
+                  Director</button>
               </div>
             </div>
           </div>
 
-          <div class="result-footer">
-            <div class="verification-badge">
-              <i data-lucide="shield-check"></i> Real-time inference vector (R² = <span id="summary-r2">92.55%</span>)
+          <!-- Output Prediction Display Card -->
+          <div class="glass-panel result-panel">
+            <div>
+              <div class="panel-header-badge">
+                <span class="badge-tag-success"><i data-lucide="check-circle-2"></i> ML Matrix Inference Output</span>
+              </div>
+              <h2 class="panel-title">
+                <i data-lucide="cpu" style="color: var(--accent-cyan);"></i> Predicted Monthly Salary
+              </h2>
+              <p class="panel-subtitle">Ordinary Least Squares Regression Valuation Result</p>
+
+              <div class="prediction-card">
+                <div class="candidate-tag" id="pred-candidate-tag">Standard Candidate Benchmark</div>
+                <span class="pred-tag">RECOMMENDED MONTHLY SALARY</span>
+                <div class="pred-amount" id="predicted-salary-display">₹98,420</div>
+                <div class="pred-range">
+                  Statistical Confidence Range (±MAE): <span id="pred-min-range">₹91,962</span> – <span
+                    id="pred-max-range">₹1,04,877</span>
+                </div>
+              </div>
+
+              <!-- Math Breakdown Matrix -->
+              <div class="math-breakdown">
+                <h4 class="breakdown-title">
+                  <i data-lucide="binary"></i> Linear Model Coefficient Matrix Breakdown
+                </h4>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Base Model Intercept (β₀)</span>
+                  <span class="breakdown-val val-plus" id="math-intercept-val">+₹47,401.10</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Tenure (<span id="math-exp-hrs">5.5</span> yrs × ₹4,775.67)</span>
+                  <span class="breakdown-val val-plus" id="math-exp-val">+₹26,266.19</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Age Index (<span id="math-age-yrs">32</span> yrs × -₹184.98)</span>
+                  <span class="breakdown-val val-minus" id="math-age-val">-₹5,919.36</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Performance Appraisal (<span id="math-perf-rating">3.8</span> ×
+                    ₹6,040.30)</span>
+                  <span class="breakdown-val val-plus" id="math-perf-val">+₹22,953.14</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Certifications (<span id="math-cert-cnt">3</span> × ₹1,358.53)</span>
+                  <span class="breakdown-val val-plus" id="math-cert-val">+₹4,075.59</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Department Offset (<span id="math-dept-name">IT</span>)</span>
+                  <span class="breakdown-val" id="math-dept-val">+₹4,469.16</span>
+                </div>
+              </div>
             </div>
-            <button class="btn btn-primary" onclick="printPredictionReport()">
-              <i data-lucide="printer"></i> Print / Export Benchmark
-            </button>
+
+            <div class="result-footer">
+              <div class="verification-badge">
+                <i data-lucide="shield-check"></i> Real-time inference vector (R² = <span id="summary-r2">92.55%</span>)
+              </div>
+              <button class="btn btn-primary" onclick="printPredictionReport()">
+                <i data-lucide="printer"></i> Print / Export Benchmark
+              </button>
+            </div>
           </div>
+
         </div>
 
       </div>
 
+      <!-- Footer -->
+      <footer class="footer">
+        <p>NEXUS HR AI — Enterprise Compensation Intelligence Engine &copy; 2026 | Modern Light UI Architecture</p>
+      </footer>
+
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-      <p>NEXUS HR AI — Enterprise Compensation Intelligence Engine &copy; 2026 | Modern Light UI Architecture</p>
-    </footer>
-
-  </div>
-
-  <!-- Main JavaScript App Logic -->
-  <script src="app.js"></script>
+    <!-- Main JavaScript App Logic -->
+    <script src="app.js"></script>
 </body>
+
 </html>
