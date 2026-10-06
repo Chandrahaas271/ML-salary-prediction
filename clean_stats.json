@@ -1,0 +1,14 @@
+{
+  "total_raw": 89,
+  "duplicates_removed": 4,
+  "expMed": 8.2,
+  "ageMed": 38,
+  "perfMed": 2.8,
+  "q1": 77942,
+  "q3": 128770,
+  "iqr": 50828,
+  "lower": 1700,
+  "upper": 205012,
+  "outliers_count": 2,
+  "clean_count": 83
+}

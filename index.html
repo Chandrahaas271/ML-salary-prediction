@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXUS HR AI — Enterprise Compensation Intelligence & ML Inference Engine</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Mesh Gradients -->
+  <div class="mesh-bg"></div>
+  <div class="glow-spot spot-1"></div>
+  <div class="glow-spot spot-2"></div>
+
+  <div class="app-container">
+    
+    <!-- Top Enterprise Header Component -->
+    <header class="header">
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <i data-lucide="sparkles"></i>
+        </div>
+        <div>
+          <div class="brand-top-bar">
+            <span class="brand-title">NEXUS HR AI</span>
+            <span class="status-indicator"><span class="dot"></span> Model Active (v2.4 OLS)</span>
+            <span class="badge-enterprise">Enterprise Ready</span>
+          </div>
+          <div class="brand-subtitle">
+            Real-time Machine Learning Compensation Intelligence & Salary Optimization Engine
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="salary_prediction_notebook.ipynb" download class="btn btn-secondary">
+          <i data-lucide="file-code"></i> Export Notebook (.ipynb)
+        </a>
+        <button class="btn btn-primary" onclick="switchTab('predictor')">
+          <i data-lucide="zap"></i> Dynamic Predictor
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Summary Grid -->
+    <section class="kpi-grid">
+      <div class="kpi-card" style="--card-border: #3b82f6; --card-accent: #60a5fa;">
+        <div class="kpi-header">
+          <span>INGESTED RECORDS</span>
+          <div class="kpi-icon"><i data-lucide="database"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-raw">89</div>
+        <div class="kpi-desc">Raw HR telemetry rows</div>
+      </div>
+
+      <div class="kpi-card" style="--card-border: #06b6d4; --card-accent: #22d3ee;">
+        <div class="kpi-header">
+          <span>CLEANED DATASET</span>
+          <div class="kpi-icon"><i data-lucide="sparkle"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-clean">83</div>
+        <div class="kpi-desc">Verified non-outlier rows</div>
+      </div>
+
+      <div class="kpi-card" style="--card-border: #10b981; --card-accent: #34d399;">
+        <div class="kpi-header">
+          <span>MODEL ACCURACY (R²)</span>
+          <div class="kpi-icon"><i data-lucide="target"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-r2">92.55%</div>
+        <div class="kpi-desc">Variance explained</div>
+      </div>
+
+      <div class="kpi-card" style="--card-border: #f59e0b; --card-accent: #fbbf24;">
+        <div class="kpi-header">
+          <span>MEAN ABS ERROR (MAE)</span>
+          <div class="kpi-icon"><i data-lucide="calculator"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-mae">₹6,457.40</div>
+        <div class="kpi-desc">Precision deviation margin</div>
+      </div>
+
+      <div class="kpi-card" style="--card-border: #ec4899; --card-accent: #f472b6;">
+        <div class="kpi-header">
+          <span>ROOT MSE (RMSE)</span>
+          <div class="kpi-icon"><i data-lucide="shield-check"></i></div>
+        </div>
+        <div class="kpi-value" id="kpi-rmse">₹7,610.18</div>
+        <div class="kpi-desc">Penalized variance error</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-wrapper">
+      <button class="tab-btn active" data-tab="predictor" onclick="switchTab('predictor')">
+        <i data-lucide="sliders"></i> Dynamic Predictor
+      </button>
+      <button class="tab-btn" data-tab="analytics" onclick="switchTab('analytics')">
+        <i data-lucide="bar-chart-3"></i> Model Analytics & Coefficients
+      </button>
+      <button class="tab-btn" data-tab="pipeline" onclick="switchTab('pipeline')">
+        <i data-lucide="workflow"></i> Data Pipeline & Cleaning
+      </button>
+      <button class="tab-btn" data-tab="notebook" onclick="switchTab('notebook')">
+        <i data-lucide="code-2"></i> Python Colab Notebook
+      </button>
+      <button class="tab-btn" data-tab="insights" onclick="switchTab('insights')">
+        <i data-lucide="lightbulb"></i> Strategic HR Insights
+      </button>
+      <button class="tab-btn" data-tab="dataset" onclick="switchTab('dataset')">
+        <i data-lucide="table"></i> Telemetry Data Explorer
+      </button>
+    </nav>
+
+    <!-- TAB 1: DYNAMIC PREDICTOR -->
+    <main id="tab-predictor" class="tab-panel active">
+      <div class="predictor-grid">
+        
+        <!-- Controls Form -->
+        <div class="glass-panel">
+          <h2 class="panel-title">
+            <i data-lucide="sliders"></i> Candidate Parameters
+          </h2>
+          <p class="panel-subtitle">Adjust candidate metrics to compute instant dynamic salary benchmarks</p>
+
+          <!-- Years Experience Slider -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label" for="slider-exp">
+                <i data-lucide="briefcase"></i> Years of Experience
+              </label>
+              <span class="val-badge" id="val-exp">5.5 yrs</span>
+            </div>
+            <input type="range" id="slider-exp" min="0" max="22" step="0.1" value="5.5" oninput="updatePrediction()">
+          </div>
+
+          <!-- Age Slider -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label" for="slider-age">
+                <i data-lucide="user"></i> Employee Age
+              </label>
+              <span class="val-badge" id="val-age">32 yrs</span>
+            </div>
+            <input type="range" id="slider-age" min="20" max="65" step="1" value="32" oninput="updatePrediction()">
+          </div>
+
+          <!-- Department Selector -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label">
+                <i data-lucide="building-2"></i> Department Domain
+              </label>
+              <span class="val-badge" id="val-dept">IT</span>
+            </div>
+            <div class="dept-selector">
+              <div class="dept-pill">
+                <input type="radio" id="dept-it" name="dept" value="IT" checked onchange="updatePrediction()">
+                <label for="dept-it"><i data-lucide="code"></i> Engineering / IT</label>
+              </div>
+              <div class="dept-pill">
+                <input type="radio" id="dept-hr" name="dept" value="HR" onchange="updatePrediction()">
+                <label for="dept-hr"><i data-lucide="users"></i> People / HR</label>
+              </div>
+              <div class="dept-pill">
+                <input type="radio" id="dept-mkt" name="dept" value="Marketing" onchange="updatePrediction()">
+                <label for="dept-mkt"><i data-lucide="trending-up"></i> Marketing</label>
+              </div>
+              <div class="dept-pill">
+                <input type="radio" id="dept-fin" name="dept" value="Finance" onchange="updatePrediction()">
+                <label for="dept-fin"><i data-lucide="landmark"></i> Finance</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Score Slider -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label" for="slider-perf">
+                <i data-lucide="star"></i> Performance Appraisal Rating
+              </label>
+              <span class="val-badge" id="val-perf">3.8 ⭐</span>
+            </div>
+            <input type="range" id="slider-perf" min="1.0" max="5.0" step="0.1" value="3.8" oninput="updatePrediction()">
+          </div>
+
+          <!-- Certifications Count Slider -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label class="form-label" for="slider-cert">
+                <i data-lucide="award"></i> Certifications & Credentials
+              </label>
+              <span class="val-badge" id="val-cert">3 📜</span>
+            </div>
+            <input type="range" id="slider-cert" min="0" max="5" step="1" value="3" oninput="updatePrediction()">
+          </div>
+
+          <!-- Quick Preset Buttons -->
+          <div style="margin-top: 24px; border-top: 1px solid var(--glass-border); padding-top: 16px;">
+            <span class="form-label" style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">BENCHMARK CANDIDATES:</span>
+            <div class="presets-row">
+              <button class="preset-chip" onclick="applyPreset(2.0, 24, 'IT', 2.0, 1)">Junior Dev</button>
+              <button class="preset-chip" onclick="applyPreset(12.5, 42, 'IT', 4.5, 4)">Lead Architect</button>
+              <button class="preset-chip" onclick="applyPreset(8.0, 36, 'HR', 3.5, 2)">HR Business Partner</button>
+              <button class="preset-chip" onclick="applyPreset(15.0, 48, 'Finance', 4.8, 5)">Finance Director</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Prediction Display Panel -->
+        <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h2 class="panel-title">
+              <i data-lucide="cpu" style="color: var(--accent-cyan);"></i> Machine Learning Inference Result
+            </h2>
+            <p class="panel-subtitle">Ordinary Least Squares Regression Prediction & Confidence Interval</p>
+
+            <div class="prediction-card">
+              <span class="pred-tag">RECOMMENDED MONTHLY SALARY</span>
+              <div class="pred-amount" id="predicted-salary-display">₹98,420</div>
+              <div class="pred-range">
+                Statistical Range (±MAE): <span id="pred-min-range">₹91,962</span> – <span id="pred-max-range">₹1,04,877</span>
+              </div>
+            </div>
+
+            <!-- Mathematical Formula Breakdown -->
+            <div class="math-breakdown">
+              <h4 style="font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <i data-lucide="binary" style="width: 16px; height: 16px; color: var(--accent-cyan);"></i> Linear Coefficient Contribution Matrix
+              </h4>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Model Base Intercept (β₀)</span>
+                <span class="breakdown-val val-plus">+₹47,401.10</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Tenure (<span id="math-exp-hrs">5.5</span> yrs × ₹4,775.67)</span>
+                <span class="breakdown-val val-plus" id="math-exp-val">+₹26,266.19</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Age Index (<span id="math-age-yrs">32</span> yrs × -₹184.98)</span>
+                <span class="breakdown-val val-minus" id="math-age-val">-₹5,919.36</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Performance (<span id="math-perf-rating">3.8</span> × ₹6,040.30)</span>
+                <span class="breakdown-val val-plus" id="math-perf-val">+₹22,953.14</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Certifications (<span id="math-cert-cnt">3</span> × ₹1,358.53)</span>
+                <span class="breakdown-val val-plus" id="math-cert-val">+₹4,075.59</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">Department Differential (<span id="math-dept-name">IT</span>)</span>
+                <span class="breakdown-val" id="math-dept-val">+₹4,469.16</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-subtle); display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="shield-check" style="width: 16px; height: 16px; color: var(--accent-emerald);"></i>
+            <span>Real-time vector inference verified against dataset variance (R² = 92.55%).</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- TAB 2: MODEL ANALYTICS & CHARTS -->
+    <main id="tab-analytics" class="tab-panel">
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px;">
+        
+        <!-- Plot 1: Actual vs Predicted Scatter Plot -->
+        <div class="glass-panel">
+          <h2 class="panel-title">
+            <i data-lucide="scatter-chart" style="color: var(--primary);"></i> Actual vs. Predicted Salary Distribution
+          </h2>
+          <p class="panel-subtitle">Holdout Test Set (n=16). Dashed reference line denotes perfect zero-residual fit (y = x)</p>
+          
+          <div class="chart-container">
+            <canvas id="scatterChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Plot 2: Model Coefficients Impact -->
+        <div class="glass-panel">
+          <h2 class="panel-title">
+            <i data-lucide="bar-chart-2" style="color: var(--accent-cyan);"></i> Feature Coefficients & Magnitude
+          </h2>
+          <p class="panel-subtitle">Sorted by impact vector — green denotes positive valuation, red denotes negative offset</p>
+          
+          <div class="chart-container">
+            <canvas id="coefChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- TAB 3: STEP-BY-STEP DATA CLEANING PIPELINE -->
+    <main id="tab-pipeline" class="tab-panel">
+      <div class="glass-panel" style="margin-bottom: 24px;">
+        <h2 class="panel-title"><i data-lucide="workflow"></i> Automated Data Cleaning & ETL Pipeline</h2>
+        <p class="panel-subtitle">Step-by-step transformation applied to raw enterprise telemetry data</p>
+      </div>
+
+      <div class="pipeline-steps">
+        
+        <!-- Step 1 -->
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <div>
+            <div class="step-title">Identifier Column Stripping (`employee_id`)</div>
+            <div class="step-desc">`employee_id` is a non-predictive tracking hash. Retaining it introduces spurious noise.</div>
+            <div class="code-inline">df.drop('employee_id', axis=1, inplace=True)</div>
+            <div class="step-output"><i data-lucide="check-circle"></i> Result: "Dropped employee_id — non-predictive tracking identifier eliminated"</div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <div>
+            <div class="step-title">Deduplication Engine</div>
+            <div class="step-desc">Eliminates identical duplicate employee entries that cause artificial sampling bias.</div>
+            <div class="code-inline">df.drop_duplicates(inplace=True)</div>
+            <div class="step-output"><i data-lucide="check-circle"></i> Result: "Rows before: 89 | Rows after: 85 (4 duplicate rows purged)"</div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <div>
+            <div class="step-title">Type Coercion for Performance Score</div>
+            <div class="step-desc">Casts raw string values and whitespaces to IEEE float64 format, coercing corrupt values to NaN.</div>
+            <div class="code-inline">df['performance_score'] = pd.to_numeric(df['performance_score'], errors='coerce')</div>
+            <div class="step-output"><i data-lucide="check-circle"></i> Result: "performance_score converted from object to float64"</div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-card">
+          <div class="step-number">4</div>
+          <div>
+            <div class="step-title">Robust Median Imputation</div>
+            <div class="step-desc">Replaces missing values (NaN) with robust non-skewed column medians (Experience: 8.2, Age: 38.0, Rating: 2.8).</div>
+            <div class="code-inline">df['years_experience'].fillna(df['years_experience'].median(), inplace=True)</div>
+            <div class="step-output"><i data-lucide="check-circle"></i> Result: "5 experience, 4 age, and 3 performance NaN values successfully imputed"</div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-card">
+          <div class="step-number">5</div>
+          <div>
+            <div class="step-title">IQR Outlier Filtering</div>
+            <div class="step-desc">Detects and prunes extreme outlier salaries (₹99,99,999 & ₹88,88,888). Upper bound cutoff: ₹2,05,012.</div>
+            <div class="code-inline">df = df[(df['monthly_salary'] >= lower) & (df['monthly_salary'] <= upper)]</div>
+            <div class="step-output"><i data-lucide="check-circle"></i> Result: "Purged 2 extreme corrupt salary outliers exceeding upper bound cutoff"</div>
+          </div>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="step-card">
+          <div class="step-number">6</div>
+          <div>
+            <div class="step-title">Department One-Hot Encoding (`drop_first=True`)</div>
+            <div class="step-desc">Converts categorical departments into binary indicators to eliminate dummy variable trap.</div>
+            <div class="code-inline">df = pd.get_dummies(df, columns=['department'], drop_first=True)</div>
+            <div class="step-output"><i data-lucide="check-circle"></i> Result: "Department encoded: ['department_HR', 'department_IT', 'department_Marketing']"</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- TAB 4: COLAB NOTEBOOK VIEWER -->
+    <main id="tab-notebook" class="tab-panel">
+      <div class="glass-panel" style="margin-bottom: 24px;">
+        <h2 class="panel-title"><i data-lucide="code-2"></i> Production Python Code Pipeline</h2>
+        <p class="panel-subtitle">Clean Google Colab notebook code formatted with markdown explanations and inline comments</p>
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span>Cell 1: Telemetry Exploration</span>
+          <button class="copy-btn" onclick="copyCode('code-cell-1')"><i data-lucide="copy"></i> Copy</button>
+        </div>
+        <pre><code id="code-cell-1"># 1. Explore Raw Telemetry Data
+print('Shape of raw dataset:', df.shape)
+print('\n--- Info Summary ---')
+df.info()
+print('\nMissing values count per column:')
+print(df.isnull().sum())
+print('\nDuplicate rows count:', df.duplicated().sum())
+
+# Display descriptive statistics
+df.describe()</code></pre>
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span>Cell 2: Automated ETL & Cleaning Steps</span>
+          <button class="copy-btn" onclick="copyCode('code-cell-2')"><i data-lucide="copy"></i> Copy</button>
+        </div>
+        <pre><code id="code-cell-2"># Step 1 — Drop identifier column
+df.drop('employee_id', axis=1, inplace=True)
+
+# Step 2 — Purge duplicate records
+df.drop_duplicates(inplace=True)
+
+# Step 3 — Coerce numeric performance scores
+df['performance_score'] = pd.to_numeric(df['performance_score'], errors='coerce')
+
+# Step 4 — Robust median imputation for missing values
+for col in ['years_experience', 'age', 'performance_score']:
+    df[col].fillna(df[col].median(), inplace=True)
+
+# Step 5 — IQR salary outlier removal
+Q1 = df['monthly_salary'].quantile(0.25)
+Q3 = df['monthly_salary'].quantile(0.75)
+IQR = Q3 - Q1
+upper_bound = Q3 + 1.5 * IQR
+df = df[df['monthly_salary'] <= upper_bound]
+
+# Step 6 — One-hot encoding
+df = pd.get_dummies(df, columns=['department'], drop_first=True)
+print("Clean dataset features:", list(df.columns))</code></pre>
+      </div>
+
+      <div class="code-block-wrapper">
+        <div class="code-header">
+          <span>Cell 3: Linear Model Fit & Metrics</span>
+          <button class="copy-btn" onclick="copyCode('code-cell-3')"><i data-lucide="copy"></i> Copy</button>
+        </div>
+        <pre><code id="code-cell-3">from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+# Feature target split
+X = df.drop('monthly_salary', axis=1)
+y = df['monthly_salary']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# OLS Model Training
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+# Metric Evaluation
+print(f"R² Score: {r2_score(y_test, y_pred):.4f}")
+print(f"MAE: ₹{mean_absolute_error(y_test, y_pred):,.2f}")
+print(f"RMSE: ₹{np.sqrt(mean_squared_error(y_test, y_pred)):,.2f}")</code></pre>
+      </div>
+    </main>
+
+    <!-- TAB 5: BUSINESS INSIGHTS -->
+    <main id="tab-insights" class="tab-panel">
+      <div class="glass-panel" style="margin-bottom: 24px;">
+        <h2 class="panel-title"><i data-lucide="lightbulb"></i> Executive Compensation Strategy</h2>
+        <p class="panel-subtitle">Key takeaways derived from model weight vectors for HR & Finance leadership</p>
+      </div>
+
+      <div class="insights-grid">
+        
+        <div class="insight-card">
+          <div class="insight-icon" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa;">
+            <i data-lucide="trending-up"></i>
+          </div>
+          <h3 class="insight-title">1. Primary Valuation Drivers</h3>
+          <p class="insight-body">
+            <strong>Years of Experience</strong> serves as the primary linear driver of salary, yielding approximately <strong>₹4,775 per month</strong> for every year of tenure. <strong>Performance Appraisal</strong> is second, generating <strong>₹6,040 per point rating</strong>. Compensation committees should align salary bands around experience tiers while rewarding high performers with merit-based bonuses.
+          </p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-icon" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">
+            <i data-lucide="check-circle-2"></i>
+          </div>
+          <h3 class="insight-title">2. Operational Rupee Precision</h3>
+          <p class="insight-body">
+            Achieving an <strong>R² score of 92.55%</strong> with an average error (MAE) of <strong>₹6,457.40</strong> provides sufficient precision for corporate salary benchmarking, equity auditing, and offer letter generation within an expected 5% variance margin.
+          </p>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-icon" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">
+            <i data-lucide="shield-alert"></i>
+          </div>
+          <h3 class="insight-title">3. Model Scope & Architectural Limits</h3>
+          <p class="insight-body">
+            Linear Regression models assume constant variance and independent features. It does not model diminishing marginal returns for executive-level tenure (>20 years) or complex interactions between specific certifications and departmental roles. Higher-order non-linear models (XGBoost / Random Forest) can capture these edge cases.
+          </p>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- TAB 6: TELEMETRY DATASET VIEWER -->
+    <main id="tab-dataset" class="tab-panel">
+      <div class="glass-panel">
+        <div class="table-controls">
+          <div>
+            <h2 class="panel-title"><i data-lucide="table"></i> Telemetry Data Explorer</h2>
+            <p class="panel-subtitle">Filter raw employee records, deduplication tags, and median imputations</p>
+          </div>
+          <input type="text" id="table-search" class="search-input" placeholder="Search by ID, Dept, Exp..." oninput="filterTable()">
+        </div>
+
+        <div class="table-responsive">
+          <table id="dataset-table">
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Experience (Yrs)</th>
+                <th>Age</th>
+                <th>Department</th>
+                <th>Perf Score</th>
+                <th>Certifications</th>
+                <th>Monthly Salary (₹)</th>
+                <th>ETL Status</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <!-- Dynamically populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>NEXUS HR AI — Enterprise Compensation Intelligence Engine &copy; 2026 | Built for High-Performance Production Environments</p>
+    </footer>
+
+  </div>
+
+  <!-- Main JavaScript App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

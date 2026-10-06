@@ -1,0 +1,13 @@
+{
+  "name": "hr-salary-prediction-studio",
+  "version": "1.0.0",
+  "description": "Cinematic ML HR Salary Prediction Dashboard & Interactive Inference Engine",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["machine-learning", "linear-regression", "hr-analytics", "interactive-dashboard"],
+  "author": "Data Science Instructor",
+  "license": "MIT"
+}
